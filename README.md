@@ -40,3 +40,4 @@ By project completion, the server and website will:
 - Provide an analytics page summarizing visitors, requests, and trending stocks.
 - Detect and mitigate simple DoS attacks by blocking abusive IPs.
 - Include a custom HTTP client for testing uploads, downloads, and stress scenarios.
+- Include pages that represents stock analysis to show feeds to issue stock-related activities.

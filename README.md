@@ -44,7 +44,19 @@ By project completion, the server and website will:
 - Include a custom HTTP client for testing uploads, downloads, and stress scenarios.
 - Include pages that represents stock analysis to show feeds to issue stock-related activities.
 
-(Apparently in terminal, the @- is treating as a operator)
+Install node.js with npm install
+
+To run client
+cd se4390_project
+cd client
+npm run dev
+
+To run server
+cd se4390_project
+cd server
+python server.py {port #}
+
+Please note, to kill terminal, you need to go task manager and close the python terminal page or use TASKKILL /F /IM python.exe
 
 # Client Side
 
@@ -60,10 +72,12 @@ HEADER method
 
 # Testing POST method
 
-echo "hello world" > test.txt
-Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+- echo "hello world" > test.txt
+- Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
 
 # Testing PUT method
 
 - echo "old" > test.txt
 - Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+
+But it works!

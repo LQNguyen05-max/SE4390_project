@@ -44,6 +44,23 @@ By project completion, the server and website will:
 - Include a custom HTTP client for testing uploads, downloads, and stress scenarios.
 - Include pages that represents stock analysis to show feeds to issue stock-related activities.
 
+<<<<<<< HEAD
+=======
+Install node.js with npm install
+
+To run client
+cd se4390_project
+cd client
+npm run dev
+
+To run server
+cd se4390_project
+cd server
+python server.py {port #}
+
+Please note, to kill terminal, you need to go task manager and close the python terminal page or use TASKKILL /F /IM python.exe
+
+>>>>>>> 9133198d8f68cdbdcfa732c91f933b062cfc957b
 # Client Side
 
 ex. python client.py 127.0.0.1 8080 index.html GET
@@ -73,6 +90,7 @@ Get-Content test.txt -Raw | curl.exe -X POST --data-binary "@-" http://127.0.0.1
 
 # Testing POST method
 
+<<<<<<< HEAD
 echo {message} > test.txt
 Get-Content test.txt -Raw | curl.exe -X POST --data-binary "@-" http://127.0.0.1:{port}/Upload/test.txt
 
@@ -80,3 +98,14 @@ Get-Content test.txt -Raw | curl.exe -X POST --data-binary "@-" http://127.0.0.1
 
 echo {message} > test.txt
 Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:{port}/Upload/test.txt
+=======
+- echo "hello world" > test.txt
+- Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+
+# Testing PUT method
+
+- echo "old" > test.txt
+- Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+
+But it works!
+>>>>>>> 9133198d8f68cdbdcfa732c91f933b062cfc957b

@@ -182,7 +182,6 @@ def send_404(conn):
     header = "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n"
     conn.sendall(header.encode() + body)
 
-
 # ------------------------------
 # Main Client Handler
 # ------------------------------

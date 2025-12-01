@@ -38,7 +38,6 @@ def get_query_param(path, key):
 # API Endpoint Handler
 def handle_api(conn, path):
     # /api/search?query=NVDA
-    # make sure to add ?query to the request
     if path.startswith("/api/search"):
         query = get_query_param(path, "query") or ""
         try:
@@ -134,7 +133,7 @@ def handle_api(conn, path):
 
 
 # ------------------------------
-# Serve static files
+# Serve GET requests for static files
 # ------------------------------
 def send_file(conn, file_path):
     ext = file_path.split(".")[-1]
@@ -155,6 +154,28 @@ def send_file(conn, file_path):
     header = f"HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\n\r\n"
     conn.sendall(header.encode() + body)
 
+# ------------------------------
+# Serve HEAD requests for static files
+# ------------------------------
+
+def send_head(conn, file_path):
+    ext = file_path.split(".")[-1]
+
+    mime = {
+        "html": "text/html",
+        "css": "text/css",
+        "js": "application/javascript",
+        "jsx": "application/javascript",
+        "png": "image/png",
+        "jpg": "image/jpg",
+        "jpeg": "image/jpeg"
+    }.get(ext, "text/plain")
+    if not os.path.exists(file_path):
+        send_404(conn)
+        return
+    size = os.path.getsize(file_path)
+    header = f"HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nContent-Length: {size}\r\n\r\n"
+    conn.sendall(header.encode())
 
 def send_404(conn):
     body = b"<h1>404 Not Found</h1>"
@@ -167,12 +188,70 @@ def send_404(conn):
 # ------------------------------
 def handle_client(conn, addr):
     request = conn.recv(4096).decode(errors="ignore")
-    # print(f"\n--- Incoming Request from {addr} ---")
-    # print(request)
 
     try:
-        path = request.split(" ")[1]
-    except:
+        request_line, rest = request.split("\r\n", 1)
+        method, path, version = request_line.split(" ", 2)
+    except Exception:
+        conn.close()
+        return
+    
+    # Default to index.html
+    if path == "/":
+        path = "/index.html"
+
+    file_path = os.path.join(WEBROOT, path.lstrip("/"))
+
+    headers = {}
+    lines = rest.split("\r\n")
+    i=0
+    while i < len(lines):
+        line = lines[i]
+        if line == "":
+            i += 1
+            break
+        if ":" in line:
+            key, value = line.split(":", 1)
+            headers[key.strip().lower()] = value.strip()
+        i += 1
+    body = b""
+    if method in ("POST", "PUT"):
+        content_length = int(headers.get("content-length", 0))
+        body = b"\r\n".join(line.encode() for line in lines[i:])
+        while len(body) < content_length:
+            body += conn.recv(4096)
+    
+    if method == "HEAD":
+        if os.path.exists(file_path):
+            send_head(conn,file_path)
+        else:
+            send_404(conn)
+        conn.close()
+        return
+    
+    if method == "POST" and path.startswith("/Upload"):
+        filename = path.split("/")[-1]
+        upload_dir = os.path.join(WEBROOT, "Upload")
+        os.makedirs(upload_dir, exist_ok=True)
+        file_path = os.path.join(upload_dir, filename)
+
+        with open(file_path, "wb") as f:
+            f.write(body.encode() if isinstance(body, str) else body)
+
+            header = "HTTP/1.1 201 Created\r\n\r\n"
+            conn.sendall(header.encode())
+            conn.close()
+            return
+    
+    if method == "PUT" and path.startswith("/Upload"):
+        filename = path.split("/")[-1]
+        upload_dir = os.path.join(WEBROOT, "Upload")
+        os.makedirs(upload_dir, exist_ok=True)
+        file_path = os.path.join(upload_dir, filename)
+        with open(file_path, "wb") as f:
+            f.write(body)
+        header = "HTTP/1.1 200 OK\r\n\r\n"
+        conn.sendall(header.encode())
         conn.close()
         return
 
@@ -183,12 +262,6 @@ def handle_client(conn, addr):
         handle_api(conn, path)
         conn.close()
         return
-
-    # Default to index.html
-    if path == "/":
-        path = "/index.html"
-
-    file_path = os.path.join(WEBROOT, path.lstrip("/"))
 
     if not os.path.exists(file_path):
     # Serve index.html for client-side routes (SPA fallback)

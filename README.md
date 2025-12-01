@@ -58,6 +58,18 @@ python server.py {port #}
 
 Please note, to kill terminal, you need to go task manager and close the python terminal page or use TASKKILL /F /IM python.exe
 
+# Client Side
+
+GET method
+
+- python client.py 127.0.0.1 8080 index.html GET
+
+HEADER method
+
+# Server Side
+
+# Testing GET method
+
 # Testing POST method
 
 - echo "hello world" > test.txt

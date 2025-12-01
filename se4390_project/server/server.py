@@ -3,6 +3,8 @@ import threading
 import os
 import json
 import sys
+import yfinance as yf
+import requests
 
 # HOST AND PORT
 HOST = "127.0.0.1"
@@ -13,7 +15,12 @@ WEBROOT = "../dist"
 # Send JSON Response
 def send_json(conn, data):
     body = json.dumps(data).encode()
-    header = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"
+    header = (
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: application/json\r\n"
+        "Access-Control-Allow-Origin: *\r\n"
+        "\r\n"
+    )
     conn.sendall(header.encode() + body)
 
 # Query Parameter Parser
@@ -30,43 +37,100 @@ def get_query_param(path, key):
 
 # API Endpoint Handler
 def handle_api(conn, path):
-
-    # /api/search?query=AAPL
+    # /api/search?query=NVDA
+    # make sure to add ?query to the request
     if path.startswith("/api/search"):
         query = get_query_param(path, "query") or ""
-        data = {
-            "query": query,
-            "results": [f"Sample news for {query}", "More sample news"]
-        }
+        try:
+            print("Query received:", query)
+            ticker = yf.Ticker(query)
+            info = ticker.info
+            print("Ticker info:", info)
+            data = {
+                "query": query,
+                "shortName": info.get("shortName", "N/A"),
+                "currentPrice": info.get("currentPrice", "N/A"),
+                "marketCap": info.get("marketCap", "N/A"),
+                "currency": info.get("currency", "N/A"),
+                "exchange": info.get("exchange", "N/A"),
+            }
+        except Exception as e:
+            data = {
+                "query": query,
+                "error": str(e)
+            }
         send_json(conn, data)
         return
 
-    # /api/stats/AAPL
+    # /api/stats/aapl
     if path.startswith("/api/stats"):
         ticker = path.split("/")[-1]
-        data = {
-            "ticker": ticker,
-            "visits": 12,
-            "popularity_rank": 3
-        }
+        try:
+            stats_ticker = yf.Ticker(ticker)
+            print("Fetching stats for:", ticker)
+            stats_info = stats_ticker.info
+            data = {
+                "ticker": ticker,
+                "shortName": stats_info.get("shortName", "N/A"),
+                "currentPrice": stats_info.get("currentPrice", "N/A"),
+                "marketCap": stats_info.get("marketCap", "N/A"),
+                "peRatio": stats_info.get("trailingPE", "N/A"),
+                "52WeekHigh": stats_info.get("fiftyTwoWeekHigh", "N/A"),
+                "52WeekLow": stats_info.get("fiftyTwoWeekLow", "N/A"),
+                "dividendYield": stats_info.get("dividendYield", "N/A"),
+                "industry": stats_info.get("industry", "N/A"),
+                "sector": stats_info.get("sector", "N/A"),
+                "website": stats_info.get("website", "N/A"),
+            }
+        except Exception as e:
+            data = {
+                "ticker": ticker,
+                "error": str(e)
+            }
         send_json(conn, data)
         return
 
     # /api/news/AAPL
     if path.startswith("/api/news"):
         ticker = path.split("/")[-1]
-        data = {
-            "ticker": ticker,
-            "news": [
-                f"{ticker} hits new high",
-                f"{ticker} analysts raise forecast"
-            ]
-        }
+        try:
+            news_ticker = yf.Ticker(ticker)
+            news_items = news_ticker.news or []
+            # print("Raw news_items for", ticker, ":", news_items)
+            if news_items:
+                print("First news item keys:", list(news_items[0].keys()))
+                print("First news item:", news_items[0])
+            filtered_news = []
+            for item in news_items:
+                if isinstance(item, dict) and "content" in item:
+                    content = item["content"]
+                    title = content.get("title") or content.get("headline")
+                    # Try clickThroughUrl first, then canonicalUrl, then url
+                    link = None
+                    ctu = content.get("clickThroughUrl")
+                    canUrl = content.get("canonicalUrl")
+                    if ctu and isinstance(ctu, dict) and "url" in ctu:
+                        link = ctu["url"]
+                    elif canUrl and isinstance(canUrl, dict) and "url" in canUrl:
+                        link = canUrl["url"]
+                    elif "url" in content:
+                        link = content["url"]
+                    if title and link:
+                        filtered_news.append({
+                            "title": title,
+                            "link": link
+                        })
+            data = {
+                "ticker": ticker,
+                "news": filtered_news
+            }
+        except Exception as e:
+            data = {
+                "ticker": ticker,
+                "error": str(e)
+            }
         send_json(conn, data)
         return
-
-    send_404(conn)
-
 
 
 # ------------------------------
@@ -127,9 +191,15 @@ def handle_client(conn, addr):
     file_path = os.path.join(WEBROOT, path.lstrip("/"))
 
     if not os.path.exists(file_path):
-        send_404(conn)
+    # Serve index.html for client-side routes (SPA fallback)
+        index_path = os.path.join(WEBROOT, "index.html")
+        if os.path.exists(index_path):
+            send_file(conn, index_path)
+        else:
+            send_404(conn)
+            conn.close()
+        conn.close()
         return
-
     send_file(conn, file_path)
     conn.close()
 

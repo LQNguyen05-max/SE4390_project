@@ -23,3 +23,6 @@ settings.json
 *.njsproj
 *.sln
 *.sw?
+
+# Files to remove
+test.txt

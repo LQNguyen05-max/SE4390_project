@@ -44,6 +44,8 @@ By project completion, the server and website will:
 - Include a custom HTTP client for testing uploads, downloads, and stress scenarios.
 - Include pages that represents stock analysis to show feeds to issue stock-related activities.
 
+# How to use it!
+
 Install node.js with npm install
 
 To run client
@@ -57,27 +59,41 @@ cd server
 python server.py {port #}
 
 Please note, to kill terminal, you need to go task manager and close the python terminal page or use TASKKILL /F /IM python.exe
+aka. /Download and /Upload are all shown in this project, best practice!
 
 # Client Side
 
-GET method
+ex. python client.py 127.0.0.1 8080 index.html GET
 
-- python client.py 127.0.0.1 8080 index.html GET
+## GET method (Retrieve)
 
-HEADER method
+python client.py {host#} {server port} {file_name} GET
 
-# Server Side
+## HEAD method (Fetch Headers)
 
-# Testing GET method
+python client.py {host#} {server port} {file_name} HEAD
 
-# Testing POST method
+## POST method (Publish)
 
-- echo "hello world" > test.txt
-- Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+python client.py {host#} {server port} {file_name} POST
 
-# Testing PUT method
+## PUT method (Replace)
 
-- echo "old" > test.txt
-- Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+python client.py {host#} {server port} {file_name} PUT
+
+## Server Side
+
+ex. echo "hello world" > test.txt
+Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+
+## POST method (Publish)
+
+- echo {message} > test.txt
+- Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:{port#}/Upload/test.txt
+
+## PUT method (Replace)
+
+- echo {message} > test.txt
+- Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:{port#}/Upload/test.txt
 
 But it works!

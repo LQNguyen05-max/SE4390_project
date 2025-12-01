@@ -1,8 +1,7 @@
-# Generate the code for GET, HEAD, POST, PUT
+# HTTP Parsing in Client
 import sys
 import socket
 import os
-import time
 
 def send_request(host, port, filename, command, options=None):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -14,7 +13,6 @@ def send_request(host, port, filename, command, options=None):
         response = s.recv(8192).decode()
         print(response)
 
-        # Save file if 200 OK
         if "200 OK" in response:
             body = response.split("\r\n\r\n", 1)[1]
             os.makedirs("Download", exist_ok=True)

@@ -44,26 +44,39 @@ By project completion, the server and website will:
 - Include a custom HTTP client for testing uploads, downloads, and stress scenarios.
 - Include pages that represents stock analysis to show feeds to issue stock-related activities.
 
-(Apparently in terminal, the @- is treating as a operator)
-
 # Client Side
 
-GET method
+ex. python client.py 127.0.0.1 8080 index.html GET
 
-- python client.py 127.0.0.1 8080 index.html GET
+# GET method
 
-HEADER method
+python client.py {server host} {server port} index.html GET
+
+# HEADER method
+
+python client.py {server host} {server port} index.html HEAD
+
+# POST method
+
+# Check to make sure test.txt in /Download Folder
+
+python client.py {server host} {server port} test.txt POST
+
+# PUT method
+
+python client.py {server host} {server port} test.txt PUT
 
 # Server Side
 
-# Testing GET method
+ex. echo "Hello World" > test.txt
+Get-Content test.txt -Raw | curl.exe -X POST --data-binary "@-" http://127.0.0.1:{port}/Upload/test.txt
 
 # Testing POST method
 
-echo "hello world" > test.txt
-Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+echo {message} > test.txt
+Get-Content test.txt -Raw | curl.exe -X POST --data-binary "@-" http://127.0.0.1:{port}/Upload/test.txt
 
 # Testing PUT method
 
-- echo "old" > test.txt
-- Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+echo {message} > test.txt
+Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:{port}/Upload/test.txt

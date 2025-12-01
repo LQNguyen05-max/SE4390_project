@@ -46,6 +46,18 @@ By project completion, the server and website will:
 
 (Apparently in terminal, the @- is treating as a operator)
 
+# Client Side
+
+GET method
+
+- python client.py 127.0.0.1 8080 index.html GET
+
+HEADER method
+
+# Server Side
+
+# Testing GET method
+
 # Testing POST method
 
 echo "hello world" > test.txt
@@ -53,7 +65,5 @@ Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:808
 
 # Testing PUT method
 
-echo "old" > test.txt
-Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
-
-But it works!
+- echo "old" > test.txt
+- Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt

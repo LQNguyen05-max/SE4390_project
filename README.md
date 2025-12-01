@@ -48,12 +48,12 @@ By project completion, the server and website will:
 
 # Testing POST method
 
-echo "hello world" > test.txt
-Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+- echo "hello world" > test.txt
+- Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
 
 # Testing PUT method
 
-echo "old" > test.txt
-Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+- echo "old" > test.txt
+- Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
 
 But it works!

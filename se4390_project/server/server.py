@@ -206,6 +206,17 @@ def send_head(conn, file_path):
     header = f"HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nContent-Length: {size}\r\n\r\n"
     conn.sendall(header.encode())
 
+# Error Responses (400 - bad request, 403 - forbidden, 404 - not found, 429 - too many requests)
+def send_400(conn):
+    body = b"<h1>400 Bad Request</h1>"
+    header = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n\r\n"
+    conn.sendall(header.encode() + body)
+
+def send_403(conn):
+    body = b"<h1>403 Forbidden</h1>"
+    header = "HTTP/1.1 403 Forbidden\r\nContent-Type: text/html\r\n\r\n"
+    conn.sendall(header.encode() + body)
+
 def send_404(conn):
     body = b"<h1>404 Not Found</h1>"
     header = "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n"
@@ -251,6 +262,7 @@ def handle_client(conn, addr):
         request_line, rest = request.split("\r\n", 1)
         method, path, version = request_line.split(" ", 2)
     except Exception:
+        send_400(conn)
         conn.close()
         return
     

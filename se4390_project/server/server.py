@@ -4,13 +4,48 @@ import os
 import json
 import sys
 import yfinance as yf
-import requests
+import time
 
 # HOST AND PORT
 HOST = "127.0.0.1"
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
 
 WEBROOT = "../dist"     
+
+
+# Visitor Tracking and Cookies
+Visitor_DB = "visitors.json"
+visitors = {}
+visitor_lock = threading.Lock()
+
+# Request DoS Attack Protection
+DOS_protection_limit = 100
+ban_ip = set()
+request_time = {}
+
+# Load existing visitor data if available
+if os.path.exists(Visitor_DB):
+    with open(Visitor_DB, "r") as f:
+        visitors = json.load(f)
+
+# Update visitor info
+def update_visitor(ip, ticker=None):
+    now = time.time()
+    with visitor_lock:
+        if ip not in visitors:
+            visitors[ip] = {
+                "last_visit": now,
+                "tickers": {}
+            }
+        visitors[ip]["last_visit"] = now
+        if ticker:
+            visitors[ip]["tickers"][ticker] = visitors[ip]["tickers"].get(ticker, 0) + 1
+        
+# Save visitor data to file
+def save_visitors():
+    with visitor_lock:
+        with open(Visitor_DB, "w") as f:
+            json.dump(visitors, f)
 
 # Send JSON Response
 def send_json(conn, data):
@@ -37,7 +72,6 @@ def get_query_param(path, key):
 
 # API Endpoint Handler
 def handle_api(conn, path):
-    # /api/search?query=NVDA
     if path.startswith("/api/search"):
         query = get_query_param(path, "query") or ""
         try:
@@ -61,7 +95,6 @@ def handle_api(conn, path):
         send_json(conn, data)
         return
 
-    # /api/stats/aapl
     if path.startswith("/api/stats"):
         ticker = path.split("/")[-1]
         try:
@@ -89,13 +122,11 @@ def handle_api(conn, path):
         send_json(conn, data)
         return
 
-    # /api/news/AAPL
     if path.startswith("/api/news"):
         ticker = path.split("/")[-1]
         try:
             news_ticker = yf.Ticker(ticker)
             news_items = news_ticker.news or []
-            # print("Raw news_items for", ticker, ":", news_items)
             if news_items:
                 print("First news item keys:", list(news_items[0].keys()))
                 print("First news item:", news_items[0])
@@ -104,7 +135,6 @@ def handle_api(conn, path):
                 if isinstance(item, dict) and "content" in item:
                     content = item["content"]
                     title = content.get("title") or content.get("headline")
-                    # Try clickThroughUrl first, then canonicalUrl, then url
                     link = None
                     ctu = content.get("clickThroughUrl")
                     canUrl = content.get("canonicalUrl")
@@ -157,7 +187,6 @@ def send_file(conn, file_path):
 # ------------------------------
 # Serve HEAD requests for static files
 # ------------------------------
-
 def send_head(conn, file_path):
     ext = file_path.split(".")[-1]
 
@@ -182,11 +211,41 @@ def send_404(conn):
     header = "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n"
     conn.sendall(header.encode() + body)
 
+def send_429(conn):
+    body = b"<h1>429 Too Many Requests</h1>"
+    header = "HTTP/1.1 429 Too Many Requests\r\nContent-Type: text/html\r\n\r\n"
+    conn.sendall(header.encode() + body)
+
 # ------------------------------
 # Main Client Handler
 # ------------------------------
 def handle_client(conn, addr):
     request = conn.recv(4096).decode(errors="ignore")
+
+    ip = addr[0]
+    now = time.time()
+
+    with visitor_lock:
+        if ip in ban_ip:
+            send_429(conn)
+            conn.close()
+            return
+        
+        # track request times for DoS protection
+        times = request_time.get(ip, [])
+        times = [t for t in times if now - t < 60]
+        times.append(now)
+        request_time[ip] = times
+        
+        if len(times) >= DOS_protection_limit:
+            ban_ip.add(ip)
+            print(f"Banning IP {ip} for excessive requests")
+            send_429(conn)
+            conn.close()
+            return
+        
+    print("Connection from", addr)
+
 
     try:
         request_line, rest = request.split("\r\n", 1)
@@ -198,6 +257,12 @@ def handle_client(conn, addr):
     # Default to index.html
     if path == "/":
         path = "/index.html"
+
+    # update visitor info only for /api/news
+    if path.startswith("/api/news"): 
+        ticker = path.split("/")[-1]
+        update_visitor(ip, ticker)
+        save_visitors()
 
     file_path = os.path.join(WEBROOT, path.lstrip("/"))
 
@@ -254,9 +319,6 @@ def handle_client(conn, addr):
         conn.close()
         return
 
-    # --------------------------
-    # Check API BEFORE files
-    # --------------------------
     if path.startswith("/api/"):
         handle_api(conn, path)
         conn.close()
@@ -272,9 +334,9 @@ def handle_client(conn, addr):
             conn.close()
         conn.close()
         return
+    
     send_file(conn, file_path)
     conn.close()
-
 
 # ------------------------------
 # Start server
@@ -286,6 +348,14 @@ server.listen(8)
 print(f"Serving http://{HOST}:{PORT}")
 
 while True:
-    conn, addr = server.accept()
-    print("Waiting on connection...")
-    threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
+    try:
+        conn, addr = server.accept()
+        # print("Connection from", addr)
+        # Multithreading to handle multiple clients
+        threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
+    except KeyboardInterrupt:
+        print("Shutting down server...")
+        # Save visitor data periodically
+        save_visitors()
+        server.close()
+

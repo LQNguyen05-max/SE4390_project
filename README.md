@@ -56,10 +56,16 @@ npm run dev
 To run server
 cd se4390_project
 cd server
-python server.py {port #}
+python server.py 8080
 
-Please note, to kill terminal, you need to go task manager and close the python terminal page or use TASKKILL /F /IM python.exe
-aka. /Download and /Upload are all shown in this project, best practice!
+# Setup & Execution (Look at bottom steps)
+
+Run the client with:
+<command for running client> <serverHost> <serverPort> <filename> <command> [options]
+<command> = GET | HEAD | POST | PUT
+Optional DoS mode:
+<command for running client> <host> <port> <file> GET -d 200
+Sends 200 rapid requests to test DoS protection.
 
 # Client Side
 
@@ -84,16 +90,26 @@ python client.py {host#} {server port} {file_name} PUT
 ## Server Side
 
 ex. echo "hello world" > test.txt
-Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+Get-Content test.txt -Raw | curl.exe -X POST --data-binary "@-" http://127.0.0.1:8080/Upload/test.txt
+
+## TEST IF SERVER IS READING UP (IT WORKS THOUGH)
 
 ## POST method (Publish)
 
-- echo {message} > test.txt
-- Get-Content test.txt -Raw | curl -x POST --data-binary "@-" http://127.0.0.1:{port#}/Upload/test.txt
+- echo "Hello World" > test.txt
+- Get-Content test.txt -Raw | curl.exe -X POST --data-binary "@-" http://127.0.0.1:{port#}/Upload/test.txt
+- The file in test.txt should print "Hello World"
 
 ## PUT method (Replace)
 
-- echo {message} > test.txt
+- echo "Hello World 2.0" > test.txt
 - Get-Content test.txt -Raw | curl.exe -X PUT --data-binary "@-" http://127.0.0.1:{port#}/Upload/test.txt
+- The file content should replace to "Hello World 2.0"
 
-But it works!
+To kill the task for python server,
+run: TASKKILL /F /IM python.exe
+
+DoS Protection
+To send request, run this example code. Make sure server is running with same port!
+ex. python client.py 127.0.0.1 8080 index.html GET -d 200
+P.S.

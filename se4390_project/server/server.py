@@ -269,6 +269,12 @@ def handle_client(conn, addr):
     # Default to index.html
     if path == "/":
         path = "/index.html"
+    
+    # strong example against directory traversal
+    if ".." in path:
+        send_403(conn)
+        conn.close()
+        return
 
     # update visitor info only for /api/news
     if path.startswith("/api/news"): 
@@ -343,7 +349,6 @@ def handle_client(conn, addr):
             send_file(conn, index_path)
         else:
             send_404(conn)
-            conn.close()
         conn.close()
         return
     

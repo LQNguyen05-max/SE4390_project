@@ -41,7 +41,9 @@ By project completion, the server and website will:
 # How to use it!
 Head over to my GitHub and clone the project
 <img width="1881" height="917" alt="image" src="https://github.com/user-attachments/assets/c0557e37-abf6-42c6-9c50-20ce654815d1" />
-Once you have an IDE, install node.js with npm install in the client side and in the server side, follow installment on what python I ran, for example: I use an offline website ticker such as yfinance
+Once you have an IDE, install node.js with npm install in the client side and in the server side, follow installment on what python I ran, for example: I use an offline website ticker such as yfinance.
+<img width="1346" height="383" alt="image" src="https://github.com/user-attachments/assets/58fa9c9a-57ca-4755-a883-34e3553adc23" />
+
 
 To close the server running make sure to kill the task for python server, run: TASKKILL /F /IM python.exe
 
